@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
 import android.util.Log
+import java.util.Locale
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -19,6 +20,26 @@ class SensorReader(context: Context) {
         private val COLOR_SENSOR_TYPE: Int? = runCatching {
             Sensor::class.java.getField("TYPE_COLOR").getInt(null)
         }.getOrNull()
+        private val NUMBER_LOCALE: Locale = Locale.US
+    }
+
+    private fun formatValue(value: Float, width: Int = 10, decimals: Int = 4): String {
+        val pattern = "%+0${width}.${decimals}f"
+        return String.format(NUMBER_LOCALE, pattern, value)
+    }
+
+    private fun formatRawValues(values: FloatArray): String {
+        if (values.isEmpty()) {
+            return "-"
+        }
+        if (values.size == 1) {
+            return formatValue(values.first(), width = 10, decimals = 4)
+        }
+        val indexWidth = maxOf(2, (values.size - 1).coerceAtLeast(0).toString().length)
+        return values.mapIndexed { index, value ->
+            val label = index.toString().padStart(indexWidth, '0')
+            "[${label}] ${formatValue(value, width = 10, decimals = 4)}"
+        }.joinToString("\n")
     }
 
     fun discoverSensors(): List<SensorInfo> {
@@ -105,7 +126,7 @@ class SensorReader(context: Context) {
         val converted = mutableListOf(
             ConvertedValue(
                 name = "Raw",
-                value = rawValues.joinToString(prefix = "[", postfix = "]") { value -> "%.3f".format(value) },
+                value = formatRawValues(rawValues),
                 conversionType = ConversionType.RAW
             )
         )
@@ -135,28 +156,28 @@ class SensorReader(context: Context) {
 
         conversions += ConvertedValue(
             name = "Normalized RGB",
-            value = "R %.3f, G %.3f, B %.3f".format(r, g, b),
+            value = "R ${formatValue(r, width = 8, decimals = 4)}\nG ${formatValue(g, width = 8, decimals = 4)}\nB ${formatValue(b, width = 8, decimals = 4)}",
             conversionType = ConversionType.LINEAR
         )
 
         val (h, s, v) = ColorConverter.rgbToHsv(r, g, b)
         conversions += ConvertedValue(
             name = "HSV",
-            value = "H %.1f°, S %.3f, V %.3f".format(h, s, v),
+            value = "H ${formatValue(h, width = 7, decimals = 1)}°\nS ${formatValue(s, width = 8, decimals = 3)}\nV ${formatValue(v, width = 8, decimals = 3)}",
             conversionType = ConversionType.COLOR_SPACE
         )
 
         val (x, y, z) = ColorConverter.rgbToXyz(r, g, b)
         conversions += ConvertedValue(
             name = "XYZ",
-            value = "X %.4f, Y %.4f, Z %.4f".format(x, y, z),
+            value = "X ${formatValue(x, width = 9, decimals = 4)}\nY ${formatValue(y, width = 9, decimals = 4)}\nZ ${formatValue(z, width = 9, decimals = 4)}",
             conversionType = ConversionType.COLOR_SPACE
         )
 
         val (l, a, bLab) = ColorConverter.xyzToLab(x, y, z)
         conversions += ConvertedValue(
             name = "LAB",
-            value = "L %.2f, a %.2f, b %.2f".format(l, a, bLab),
+            value = "L ${formatValue(l, width = 8, decimals = 2)}\na ${formatValue(a, width = 8, decimals = 2)}\nb ${formatValue(bLab, width = 8, decimals = 2)}",
             conversionType = ConversionType.COLOR_SPACE
         )
 
@@ -164,7 +185,7 @@ class SensorReader(context: Context) {
         if (clear != null) {
             conversions += ConvertedValue(
                 name = "Clear Channel",
-                value = "%.3f".format(clear),
+                value = formatValue(clear, width = 10, decimals = 4),
                 conversionType = ConversionType.LINEAR
             )
         }
@@ -178,21 +199,21 @@ class SensorReader(context: Context) {
 
         conversions += ConvertedValue(
             name = "Illuminance",
-            value = "%.2f lux".format(lux),
+            value = "${formatValue(lux, width = 10, decimals = 2)} lux",
             conversionType = ConversionType.LINEAR
         )
 
         val footCandles = lux / 10.764f
         conversions += ConvertedValue(
             name = "Foot-candle",
-            value = "%.2f fc".format(footCandles),
+            value = "${formatValue(footCandles, width = 10, decimals = 2)} fc",
             conversionType = ConversionType.LINEAR
         )
 
         val nits = lux / kotlin.math.PI.toFloat()
         conversions += ConvertedValue(
             name = "Luminance",
-            value = "%.2f nits".format(nits),
+            value = "${formatValue(nits, width = 10, decimals = 2)} nits",
             conversionType = ConversionType.LINEAR
         )
 
@@ -204,7 +225,7 @@ class SensorReader(context: Context) {
         }
         conversions += ConvertedValue(
             name = "Exposure Value",
-            value = if (ev100.isFinite()) "%.2f EV@ISO100".format(ev100) else "-∞ EV@ISO100",
+            value = if (ev100.isFinite()) "${formatValue(ev100, width = 8, decimals = 2)} EV@ISO100" else "-∞ EV@ISO100",
             conversionType = ConversionType.NON_LINEAR
         )
 

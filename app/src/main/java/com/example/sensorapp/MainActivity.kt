@@ -40,7 +40,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sensorapp.ui.theme.SensorReaderTheme
@@ -224,7 +226,7 @@ fun SensorCard(sensorInfo: SensorInfo, reading: SensorReading?) {
 
                 reading.convertedValues.forEach { converted ->
                     ConvertedValueRow(converted)
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                 }
             } else {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -243,10 +245,12 @@ fun SensorCard(sensorInfo: SensorInfo, reading: SensorReading?) {
 fun ConvertedValueRow(converted: ConvertedValue) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
             ConversionTypeIndicator(converted.conversionType)
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -255,11 +259,35 @@ fun ConvertedValueRow(converted: ConvertedValue) {
                 fontWeight = FontWeight.Medium
             )
         }
-        Text(
-            text = converted.value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Normal
-        )
+        Spacer(modifier = Modifier.width(12.dp))
+        if (converted.value.contains("\n")) {
+            Column(
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier.weight(1f)
+            ) {
+                converted.value.lines().forEach { line ->
+                    if (line.isNotBlank()) {
+                        Text(
+                            text = line,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = FontFamily.Monospace,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.End
+                        )
+                    }
+                }
+            }
+        } else {
+            Text(
+                text = converted.value,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Normal,
+                fontFamily = FontFamily.Monospace,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.End
+            )
+        }
     }
 }
 
