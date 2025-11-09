@@ -21,10 +21,11 @@ class SensorReader(context: Context) {
             Sensor::class.java.getField("TYPE_COLOR").getInt(null)
         }.getOrNull()
         private val NUMBER_LOCALE: Locale = Locale.US
+        private const val RAW_LINE_CHAR_CAP = 60
     }
 
     private fun formatValue(value: Float, width: Int = 10, decimals: Int = 4): String {
-        val pattern = "%+0${width}.${decimals}f"
+        val pattern = "%${width}.${decimals}f"
         return String.format(NUMBER_LOCALE, pattern, value)
     }
 
@@ -36,10 +37,15 @@ class SensorReader(context: Context) {
             return formatValue(values.first(), width = 10, decimals = 4)
         }
         val indexWidth = maxOf(2, (values.size - 1).coerceAtLeast(0).toString().length)
-        return values.mapIndexed { index, value ->
-            val label = index.toString().padStart(indexWidth, '0')
+        val entries = values.mapIndexed { index, value ->
+            val label = index.toString().padStart(indexWidth, ' ')
             "[${label}] ${formatValue(value, width = 10, decimals = 4)}"
-        }.joinToString("\n")
+        }
+        val entryWidth = entries.maxOf { it.length }.coerceAtLeast(1)
+        val perLine = maxOf(1, RAW_LINE_CHAR_CAP / entryWidth)
+        return entries.chunked(perLine).joinToString("\n") { chunk ->
+            chunk.joinToString(separator = "    ")
+        }
     }
 
     fun discoverSensors(): List<SensorInfo> {

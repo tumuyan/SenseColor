@@ -243,50 +243,93 @@ fun SensorCard(sensorInfo: SensorInfo, reading: SensorReading?) {
 
 @Composable
 fun ConvertedValueRow(converted: ConvertedValue) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
+    if (converted.conversionType == ConversionType.RAW) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            ConversionTypeIndicator(converted.conversionType)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = converted.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
-            )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        if (converted.value.contains("\n")) {
-            Column(
-                horizontalAlignment = Alignment.End,
-                modifier = Modifier.weight(1f)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                converted.value.lines().forEach { line ->
-                    if (line.isNotBlank()) {
-                        Text(
-                            text = line,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Normal,
-                            fontFamily = FontFamily.Monospace,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.End
-                        )
+                ConversionTypeIndicator(converted.conversionType)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = converted.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            if (converted.value.contains("\n")) {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    converted.value.lines().forEach { line ->
+                        if (line.isNotBlank()) {
+                            Text(
+                                text = line,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
                     }
                 }
+            } else {
+                Text(
+                    text = converted.value,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = FontFamily.Monospace
+                )
             }
-        } else {
-            Text(
-                text = converted.value,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Normal,
-                fontFamily = FontFamily.Monospace,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.End
-            )
+        }
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                ConversionTypeIndicator(converted.conversionType)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = converted.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            if (converted.value.contains("\n")) {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    converted.value.lines().forEach { line ->
+                        if (line.isNotBlank()) {
+                            Text(
+                                text = line,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = FontFamily.Monospace,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.End
+                            )
+                        }
+                    }
+                }
+            } else {
+                Text(
+                    text = converted.value,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = FontFamily.Monospace,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.End
+                )
+            }
         }
     }
 }
