@@ -35,6 +35,19 @@ class SensorReader(context: Context) {
         return "${formattedValue} ${paddedUnit}"
     }
 
+    private fun calculateEntriesPerLine(entryWidth: Int, separatorWidth: Int, maxWidth: Int): Int {
+        if (entryWidth >= maxWidth) return 1
+        var n = 1
+        while (true) {
+            val totalWidth = n * entryWidth + (n - 1) * separatorWidth
+            if (totalWidth + entryWidth + separatorWidth > maxWidth) {
+                break
+            }
+            n++
+        }
+        return maxOf(1, n)
+    }
+
     private fun formatRawValues(values: FloatArray): String {
         if (values.isEmpty()) {
             return "-"
@@ -43,8 +56,11 @@ class SensorReader(context: Context) {
             return formatValue(values.first(), width = 10, decimals = 4)
         }
         val indexWidth = maxOf(2, (values.size - 1).toString().length)
-        val entryWidth = indexWidth + 3 + 10 + 1
-        val perLine = maxOf(1, RAW_LINE_CHAR_CAP / (entryWidth + 4))
+        val sampleLabel = "0".padStart(indexWidth, ' ')
+        val sampleEntry = "[${sampleLabel}] ${formatValue(0f, width = 10, decimals = 4)}"
+        val entryWidth = sampleEntry.length
+        val separatorWidth = 4
+        val perLine = calculateEntriesPerLine(entryWidth, separatorWidth, RAW_LINE_CHAR_CAP)
 
         return values.mapIndexed { index, value ->
             val label = index.toString().padStart(indexWidth, ' ')
