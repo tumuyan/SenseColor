@@ -29,6 +29,12 @@ class SensorReader(context: Context) {
         return String.format(NUMBER_LOCALE, pattern, value)
     }
 
+    private fun formatValueWithUnit(value: Float, unit: String, unitWidth: Int = 10, valueWidth: Int = 10, decimals: Int = 2): String {
+        val formattedValue = formatValue(value, width = valueWidth, decimals = decimals)
+        val paddedUnit = unit.padEnd(unitWidth)
+        return "${formattedValue} ${paddedUnit}"
+    }
+
     private fun formatRawValues(values: FloatArray): String {
         if (values.isEmpty()) {
             return "-"
@@ -36,14 +42,15 @@ class SensorReader(context: Context) {
         if (values.size == 1) {
             return formatValue(values.first(), width = 10, decimals = 4)
         }
-        val indexWidth = maxOf(2, (values.size - 1).coerceAtLeast(0).toString().length)
-        val entries = values.mapIndexed { index, value ->
+        val indexWidth = maxOf(2, (values.size - 1).toString().length)
+        val entryWidth = indexWidth + 3 + 10 + 1
+        val perLine = maxOf(1, RAW_LINE_CHAR_CAP / (entryWidth + 4))
+
+        return values.mapIndexed { index, value ->
             val label = index.toString().padStart(indexWidth, ' ')
-            "[${label}] ${formatValue(value, width = 10, decimals = 4)}"
-        }
-        val entryWidth = entries.maxOf { it.length }.coerceAtLeast(1)
-        val perLine = maxOf(1, RAW_LINE_CHAR_CAP / entryWidth)
-        return entries.chunked(perLine).joinToString("\n") { chunk ->
+            val formatted = formatValue(value, width = 10, decimals = 4)
+            "[${label}] ${formatted}"
+        }.chunked(perLine).joinToString("\n") { chunk ->
             chunk.joinToString(separator = "    ")
         }
     }
@@ -205,21 +212,21 @@ class SensorReader(context: Context) {
 
         conversions += ConvertedValue(
             name = "Illuminance",
-            value = "${formatValue(lux, width = 10, decimals = 2)} lux",
+            value = formatValueWithUnit(lux, "lux", unitWidth = 6, valueWidth = 10, decimals = 2),
             conversionType = ConversionType.LINEAR
         )
 
         val footCandles = lux / 10.764f
         conversions += ConvertedValue(
             name = "Foot-candle",
-            value = "${formatValue(footCandles, width = 10, decimals = 2)} fc",
+            value = formatValueWithUnit(footCandles, "fc", unitWidth = 6, valueWidth = 10, decimals = 2),
             conversionType = ConversionType.LINEAR
         )
 
         val nits = lux / kotlin.math.PI.toFloat()
         conversions += ConvertedValue(
             name = "Luminance",
-            value = "${formatValue(nits, width = 10, decimals = 2)} nits",
+            value = formatValueWithUnit(nits, "nits", unitWidth = 6, valueWidth = 10, decimals = 2),
             conversionType = ConversionType.LINEAR
         )
 
@@ -231,7 +238,11 @@ class SensorReader(context: Context) {
         }
         conversions += ConvertedValue(
             name = "Exposure Value",
-            value = if (ev100.isFinite()) "${formatValue(ev100, width = 8, decimals = 2)} EV@ISO100" else "-∞ EV@ISO100",
+            value = if (ev100.isFinite()) {
+                formatValueWithUnit(ev100, "EV@ISO100", unitWidth = 10, valueWidth = 8, decimals = 2)
+            } else {
+                "      -∞ ${"EV@ISO100".padEnd(10)}"
+            },
             conversionType = ConversionType.NON_LINEAR
         )
 
