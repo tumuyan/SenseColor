@@ -47,18 +47,18 @@ fun SplashScreen(onDismiss: () -> Unit) {
         if (!dismissed) {
             dismissed = true
             contentVisible = false
-            visible = false
+            // 'visible' 的状态由 AnimatedVisibility 的 exit 动画管理
             scope.launch {
-                delay(450)
+                delay(450) // 等待退出动画完成
                 onDismiss()
             }
         }
     }
 
     LaunchedEffect(Unit) {
-        delay(100)
-        contentVisible = true
-        delay(3000)
+        // delay(100) // <-- 移除这行延迟
+        contentVisible = true // 立即开始显示内容
+        delay(6000) // 内容显示的总时长
         triggerDismiss()
     }
 
