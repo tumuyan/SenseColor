@@ -1,6 +1,8 @@
-# Android Color & Light Sensor Reader
+# Sense Color
+这是一个由AI构建的简单应用，旨在为用户呈现更多环境光/色彩传感器的信息。事实上由于Android系统API的局限性，我们并不能做到Readme中阐述的目的，但是毫无疑问这个应用确实可以比其他应用显示更多ALS的信息
 
 An Android application that reads and displays raw sensor data from color sensors and ambient light sensors on the device.
+> **Note:** This is a simple application built with the assistance of AI. Due to the limitations of Android's system APIs, it may not fully achieve all the objectives described in this README. However, it undoubtedly displays more detailed information from Ambient Light Sensors (ALS) than many other applications.
 
 ## Features
 

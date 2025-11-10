@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">感色</string>
     <string name="splash_title">感色</string>
-    <string name="splash_message">为真正的玩家和探索者而生。「感色」将掀开硬件的底层面纱，让你一窥环境光传感器的原始数据。来，一起看看你的手机“眼”里的世界，到底是什么颜色。</string>
+    <string name="splash_message">为真正的玩家和探索者而生。\n「感色」将掀开硬件的底层面纱，\n让你一窥环境光传感器的原始数据。\n一起看看你的手机“眼”里的世界。</string>
     <string name="splash_tap_hint">轻触任意位置继续</string>
 </resources>
