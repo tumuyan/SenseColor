@@ -1,4 +1,4 @@
-package com.example.sensorapp
+package com.tumuyan.sensecolor
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -32,10 +32,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.sensorapp.ui.theme.Cobalt
-import com.example.sensorapp.ui.theme.DeepBlue
-import com.example.sensorapp.ui.theme.ElectricBlue
-import com.example.sensorapp.ui.theme.Indigo
+import com.tumuyan.sensecolor.ui.theme.Cobalt
+import com.tumuyan.sensecolor.ui.theme.DeepBlue
+import com.tumuyan.sensecolor.ui.theme.ElectricBlue
+import com.tumuyan.sensecolor.ui.theme.Indigo
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -64,8 +64,8 @@ fun SplashScreen(
     LaunchedEffect(isFirstLaunchOrUpgrade) {
         contentVisible = true // 立即开始显示内容
         if (!isFirstLaunchOrUpgrade) {
-            // 非首次安装/升级情况下，6秒后自动退出
-            delay(6000)
+            // 非首次安装/升级情况下，3秒后自动退出
+            delay(3000)
             triggerDismiss()
         }
         // 首次安装或升级时，不自动退出，需要用户点击

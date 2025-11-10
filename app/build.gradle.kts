@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.sensorapp"
+    namespace = "com.tumuyan.sensecolor"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.sensorapp"
+        applicationId = "com.tumuyan.sensecolor"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

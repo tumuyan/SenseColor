@@ -1,4 +1,4 @@
-package com.example.sensorapp
+package com.tumuyan.sensecolor
 
 import kotlin.math.cbrt
 import kotlin.math.pow
