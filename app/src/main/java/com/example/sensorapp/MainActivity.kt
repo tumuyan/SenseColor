@@ -80,17 +80,20 @@ class MainActivity : ComponentActivity() {
         val currentVersionCode = PackageInfoCompat.getLongVersionCode(packageInfo)
         val preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val lastVersionCode = preferences.getLong(KEY_LAST_VERSION_CODE, -1L)
-        val shouldShowSplash = lastVersionCode != currentVersionCode
+        val isFirstLaunchOrUpgrade = lastVersionCode != currentVersionCode
 
         setContent {
             SensorReaderTheme {
                 SensorApp(
                     sensorReader = sensorReader,
-                    shouldShowSplash = shouldShowSplash,
+                    shouldShowSplash = true,
+                    isFirstLaunchOrUpgrade = isFirstLaunchOrUpgrade,
                     onSplashDismissed = {
-                        preferences.edit()
-                            .putLong(KEY_LAST_VERSION_CODE, currentVersionCode)
-                            .apply()
+                        if (isFirstLaunchOrUpgrade) {
+                            preferences.edit()
+                                .putLong(KEY_LAST_VERSION_CODE, currentVersionCode)
+                                .apply()
+                        }
                     }
                 )
             }
@@ -108,6 +111,7 @@ class MainActivity : ComponentActivity() {
 fun SensorApp(
     sensorReader: SensorReader,
     shouldShowSplash: Boolean,
+    isFirstLaunchOrUpgrade: Boolean,
     onSplashDismissed: () -> Unit
 ) {
     val sensorReadings = remember { mutableStateMapOf<Int, SensorReading>() }
@@ -161,12 +165,10 @@ fun SensorApp(
         }
 
         if (showSplash.value) {
-            SplashScreen(
-                onDismiss = {
-                    showSplash.value = false
-                    onSplashDismissed()
-                }
-            )
+            SplashScreen(isFirstLaunchOrUpgrade = isFirstLaunchOrUpgrade) {
+                showSplash.value = false
+                onSplashDismissed()
+            }
         }
     }
 }

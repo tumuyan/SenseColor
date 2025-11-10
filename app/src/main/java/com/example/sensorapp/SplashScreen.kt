@@ -40,7 +40,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun SplashScreen(onDismiss: () -> Unit) {
+fun SplashScreen(
+    isFirstLaunchOrUpgrade: Boolean = false,
+    onDismiss: () -> Unit
+) {
     var visible by remember { mutableStateOf(true) }
     var contentVisible by remember { mutableStateOf(false) }
     var dismissed by remember { mutableStateOf(false) }
@@ -58,11 +61,14 @@ fun SplashScreen(onDismiss: () -> Unit) {
         }
     }
 
-    LaunchedEffect(Unit) {
-        // delay(100) // <-- 移除这行延迟
+    LaunchedEffect(isFirstLaunchOrUpgrade) {
         contentVisible = true // 立即开始显示内容
-        delay(6000) // 内容显示的总时长
-        triggerDismiss()
+        if (!isFirstLaunchOrUpgrade) {
+            // 非首次安装/升级情况下，6秒后自动退出
+            delay(6000)
+            triggerDismiss()
+        }
+        // 首次安装或升级时，不自动退出，需要用户点击
     }
 
     AnimatedVisibility(
