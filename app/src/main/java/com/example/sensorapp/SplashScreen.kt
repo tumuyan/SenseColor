@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,6 +32,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.sensorapp.ui.theme.Cobalt
+import com.example.sensorapp.ui.theme.DeepBlue
+import com.example.sensorapp.ui.theme.ElectricBlue
+import com.example.sensorapp.ui.theme.Indigo
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -71,12 +74,7 @@ fun SplashScreen(onDismiss: () -> Unit) {
                 .fillMaxSize()
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF0F172A),
-                            Color(0xFF1E1B4B),
-                            Color(0xFF312E81),
-                            Color(0xFF4338CA)
-                        )
+                        colors = listOf(DeepBlue, Indigo, Cobalt, ElectricBlue)
                     )
                 )
                 .clickable(

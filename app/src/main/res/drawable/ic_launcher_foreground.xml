@@ -4,7 +4,52 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    
+    <!-- 外圈发光效果 -->
     <path
-        android:fillColor="@android:color/white"
-        android:pathData="M54,30C48.48,30 44,34.48 44,40C44,45.52 48.48,50 54,50C59.52,50 64,45.52 64,40C64,34.48 59.52,30 54,30ZM54,78C54,78 34,64 34,50C34,43.37 39.37,38 46,38H62C68.63,38 74,43.37 74,50C74,64 54,78 54,78Z" />
+        android:fillColor="@color/icon_glow"
+        android:pathData="M54,24 C37.43,24 24,37.43 24,54 C24,70.57 37.43,84 54,84 C70.57,84 84,70.57 84,54 C84,37.43 70.57,24 54,24Z"/>
+    
+    <!-- 主圆圈 - 代表传感器 -->
+    <path
+        android:fillColor="@color/electric_blue"
+        android:pathData="M54,28 C39.64,28 28,39.64 28,54 C28,68.36 39.64,80 54,80 C68.36,80 80,68.36 80,54 C80,39.64 68.36,28 54,28Z"/>
+    
+    <!-- 内圈 - 光线感应区域 -->
+    <path
+        android:fillColor="@color/neon_cyan"
+        android:pathData="M54,38 C45.16,38 38,45.16 38,54 C38,62.84 45.16,70 54,70 C62.84,70 70,62.84 70,54 C70,45.16 62.84,38 54,38Z"/>
+    
+    <!-- 光芒 - 4条主光线 -->
+    <path
+        android:fillColor="@color/soft_white"
+        android:pathData="M54,20 L56,32 L52,32 Z"/>
+    <path
+        android:fillColor="@color/soft_white"
+        android:pathData="M54,76 L56,88 L52,88 Z"/>
+    <path
+        android:fillColor="@color/soft_white"
+        android:pathData="M20,54 L32,56 L32,52 Z"/>
+    <path
+        android:fillColor="@color/soft_white"
+        android:pathData="M76,54 L88,56 L88,52 Z"/>
+    
+    <!-- 对角光芒 - 4条副光线 -->
+    <path
+        android:fillColor="@color/soft_white"
+        android:pathData="M29,29 L35,32 L32,35 Z"/>
+    <path
+        android:fillColor="@color/soft_white"
+        android:pathData="M79,29 L76,32 L73,35 Z"/>
+    <path
+        android:fillColor="@color/soft_white"
+        android:pathData="M29,79 L32,73 L35,76 Z"/>
+    <path
+        android:fillColor="@color/soft_white"
+        android:pathData="M79,79 L73,76 L76,73 Z"/>
+    
+    <!-- 核心发光点 -->
+    <path
+        android:fillColor="@color/soft_white"
+        android:pathData="M54,48 C50.69,48 48,50.69 48,54 C48,57.31 50.69,60 54,60 C57.31,60 60,57.31 60,54 C60,50.69 57.31,48 54,48Z"/>
 </vector>
