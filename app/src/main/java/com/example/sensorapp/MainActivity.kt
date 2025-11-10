@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,12 +17,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.ui.draw.rotate
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.res.stringResource
+import com.example.sensorapp.R
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sensorapp.ui.theme.SensorReaderTheme
@@ -91,7 +102,7 @@ fun SensorApp(sensorReader: SensorReader) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Sensor Reader") },
+                title = { Text(stringResource(R.string.app_name)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White
@@ -127,8 +138,19 @@ fun CenteredText(message: String) {
 }
 
 @Composable
-fun SensorList(sensors: List<SensorInfo>, readings: Map<Int, SensorReading>) {
-    val grouped = sensors.groupBy { it.type }
+fun SensorList(
+    sensors: List<SensorInfo>,
+    readings: Map<Int, SensorReading>
+) {
+    val expandedSensors = remember { mutableStateMapOf<Int, Boolean>() }
+    
+    LaunchedEffect(sensors) {
+        sensors.forEach { sensorInfo ->
+            if (sensorInfo.sensor.hashCode() !in expandedSensors) {
+                expandedSensors[sensorInfo.sensor.hashCode()] = true
+            }
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -136,34 +158,43 @@ fun SensorList(sensors: List<SensorInfo>, readings: Map<Int, SensorReading>) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        grouped.forEach { (type, sensorsOfType) ->
-            item {
-                TypeHeader(type)
-            }
-            items(sensorsOfType) { sensorInfo ->
-                SensorCard(sensorInfo, readings[sensorInfo.sensor.hashCode()])
-            }
+        items(
+            items = sensors,
+            key = { it.sensor.hashCode() }
+        ) { sensorInfo ->
+            val sensorId = sensorInfo.sensor.hashCode()
+            val isExpanded = expandedSensors[sensorId] ?: true
+            SensorCard(
+                sensorInfo = sensorInfo,
+                reading = readings[sensorId],
+                isExpanded = isExpanded,
+                onToggleExpanded = {
+                    expandedSensors[sensorId] = !isExpanded
+                }
+            )
         }
     }
 }
 
-@Composable
-fun TypeHeader(type: SensorType) {
-    Text(
-        text = when (type) {
-            SensorType.COLOR -> "Color Sensors"
-            SensorType.LIGHT -> "Light Sensors"
-            SensorType.UNKNOWN -> "Other Sensors"
-        },
-        style = MaterialTheme.typography.headlineSmall,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(vertical = 8.dp)
-    )
-}
 
 @Composable
-fun SensorCard(sensorInfo: SensorInfo, reading: SensorReading?) {
+fun SensorCard(
+    sensorInfo: SensorInfo,
+    reading: SensorReading?,
+    isExpanded: Boolean,
+    onToggleExpanded: () -> Unit
+) {
+    val arrowRotation by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        label = "sensorCardArrow"
+    )
+    val rawFirstValue = reading?.convertedValues
+        ?.firstOrNull { it.conversionType == ConversionType.RAW }
+        ?.value
+        ?.lines()
+        ?.firstOrNull { it.isNotBlank() }
+        ?.trim()
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -172,70 +203,120 @@ fun SensorCard(sensorInfo: SensorInfo, reading: SensorReading?) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .animateContentSize()
         ) {
-            Text(
-                text = sensorInfo.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Vendor: ${sensorInfo.vendor}",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-            Text(
-                text = "Type: ${sensorInfo.stringType}",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-            Text(
-                text = "Version: ${sensorInfo.version} | Power: %.2f mA".format(sensorInfo.power),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-            Text(
-                text = "Range: %.2f | Resolution: %.4f".format(
-                    sensorInfo.maxRange,
-                    sensorInfo.resolution
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-
-            if (reading != null) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Divider()
-                Spacer(modifier = Modifier.height(12.dp))
-
-                val accuracy = when (reading.accuracy) {
-                    SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> "High"
-                    SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> "Medium"
-                    SensorManager.SENSOR_STATUS_ACCURACY_LOW -> "Low"
-                    SensorManager.SENSOR_STATUS_UNRELIABLE -> "Unreliable"
-                    else -> "Unknown"
-                }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onToggleExpanded() }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = "Accuracy: $accuracy",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    text = sensorInfo.name,
+                    modifier = Modifier.weight(1.2f),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                reading.convertedValues.forEach { converted ->
-                    ConvertedValueRow(converted)
-                    Spacer(modifier = Modifier.height(6.dp))
+                if (!isExpanded && rawFirstValue != null) {
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        ConversionTypeIndicator(ConversionType.RAW)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = rawFirstValue,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = FontFamily.Monospace,
+                            textAlign = TextAlign.End,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
-            } else {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Waiting for data...",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Light
+
+                Icon(
+                    imageVector = Icons.Filled.ExpandMore,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .rotate(arrowRotation)
                 )
+            }
+
+            if (isExpanded) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                ) {
+                    Text(
+                        text = "Vendor: ${sensorInfo.vendor}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Type: ${sensorInfo.stringType}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Version: ${sensorInfo.version} | Power: %.2f mA".format(sensorInfo.power),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Range: %.2f | Resolution: %.4f".format(
+                            sensorInfo.maxRange,
+                            sensorInfo.resolution
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (reading != null) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Divider()
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        val accuracy = when (reading.accuracy) {
+                            SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> "High"
+                            SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> "Medium"
+                            SensorManager.SENSOR_STATUS_ACCURACY_LOW -> "Low"
+                            SensorManager.SENSOR_STATUS_UNRELIABLE -> "Unreliable"
+                            else -> "Unknown"
+                        }
+                        Text(
+                            text = "Accuracy: $accuracy",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        reading.convertedValues.forEach { converted ->
+                            ConvertedValueRow(converted)
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Waiting for data...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Light
+                        )
+                    }
+                }
             }
         }
     }
@@ -244,44 +325,62 @@ fun SensorCard(sensorInfo: SensorInfo, reading: SensorReading?) {
 @Composable
 fun ConvertedValueRow(converted: ConvertedValue) {
     if (converted.conversionType == ConversionType.RAW) {
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        val lines = converted.value.lines()
+            .map { it.trimEnd() }
+            .filter { it.isNotBlank() }
+        val isSingleLine = lines.size <= 1
+
+        Column(modifier = Modifier.fillMaxWidth()) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                ConversionTypeIndicator(converted.conversionType)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = converted.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            if (converted.value.contains("\n")) {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    converted.value.lines().forEach { line ->
-                        if (line.isNotBlank()) {
-                            Text(
-                                text = line,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Normal,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
+                    ConversionTypeIndicator(converted.conversionType)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = converted.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                if (isSingleLine && lines.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.CenterEnd
+                    ) {
+                        Text(
+                            text = lines.first(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = FontFamily.Monospace,
+                            textAlign = TextAlign.End,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
-            } else {
-                Text(
-                    text = converted.value,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Normal,
-                    fontFamily = FontFamily.Monospace
-                )
+            }
+            if (!isSingleLine && lines.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    lines.forEach { line ->
+                        Text(
+                            text = line,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = FontFamily.Monospace,
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
         }
     } else {
