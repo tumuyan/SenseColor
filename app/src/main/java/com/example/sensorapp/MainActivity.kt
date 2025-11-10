@@ -205,27 +205,39 @@ fun SensorCard(
                 .fillMaxWidth()
                 .animateContentSize()
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onToggleExpanded() }
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                Text(
-                    text = sensorInfo.name,
-                    modifier = Modifier.weight(1.2f),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = sensorInfo.name,
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Icon(
+                        imageVector = Icons.Filled.ExpandMore,
+                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .rotate(arrowRotation)
+                    )
+                }
 
                 if (!isExpanded && rawFirstValue != null) {
                     Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp),
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.End
                     ) {
@@ -242,15 +254,6 @@ fun SensorCard(
                         )
                     }
                 }
-
-                Icon(
-                    imageVector = Icons.Filled.ExpandMore,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .rotate(arrowRotation)
-                )
             }
 
             if (isExpanded) {

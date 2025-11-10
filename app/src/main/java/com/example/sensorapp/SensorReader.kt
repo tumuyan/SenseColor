@@ -42,12 +42,15 @@ class SensorReader(context: Context) {
             return formatValue(values.first(), width = 10, decimals = 4)
         }
         val indexWidth = maxOf(2, (values.size - 1).toString().length)
+        val entriesPerLine = if (values.size >= 4) 2 else 1
 
         return values.mapIndexed { index, value ->
             val label = index.toString().padStart(indexWidth, ' ')
             val formatted = formatValue(value, width = 10, decimals = 4)
             "[${label}] ${formatted}"
-        }.joinToString(separator = "\n")
+        }.chunked(entriesPerLine).joinToString(separator = "\n") { chunk ->
+            chunk.joinToString(separator = "    ")
+        }
     }
 
     fun discoverSensors(): List<SensorInfo> {
