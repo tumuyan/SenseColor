@@ -1,4 +1,4 @@
-package com.example.sensorapp
+package com.tumuyan.sensecolor
 
 import android.content.pm.PackageManager
 import android.hardware.SensorManager
@@ -33,7 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.ui.res.stringResource
-import com.example.sensorapp.R
+import com.tumuyan.sensecolor.R
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -60,7 +60,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.sensorapp.ui.theme.SensorReaderTheme
+import com.tumuyan.sensecolor.ui.theme.SensorReaderTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -80,17 +80,20 @@ class MainActivity : ComponentActivity() {
         val currentVersionCode = PackageInfoCompat.getLongVersionCode(packageInfo)
         val preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val lastVersionCode = preferences.getLong(KEY_LAST_VERSION_CODE, -1L)
-        val shouldShowSplash = lastVersionCode != currentVersionCode
+        val isFirstLaunchOrUpgrade = lastVersionCode != currentVersionCode
 
         setContent {
             SensorReaderTheme {
                 SensorApp(
                     sensorReader = sensorReader,
-                    shouldShowSplash = shouldShowSplash,
+                    shouldShowSplash = true,
+                    isFirstLaunchOrUpgrade = isFirstLaunchOrUpgrade,
                     onSplashDismissed = {
-                        preferences.edit()
-                            .putLong(KEY_LAST_VERSION_CODE, currentVersionCode)
-                            .apply()
+                        if (isFirstLaunchOrUpgrade) {
+                            preferences.edit()
+                                .putLong(KEY_LAST_VERSION_CODE, currentVersionCode)
+                                .apply()
+                        }
                     }
                 )
             }
@@ -108,6 +111,7 @@ class MainActivity : ComponentActivity() {
 fun SensorApp(
     sensorReader: SensorReader,
     shouldShowSplash: Boolean,
+    isFirstLaunchOrUpgrade: Boolean,
     onSplashDismissed: () -> Unit
 ) {
     val sensorReadings = remember { mutableStateMapOf<Int, SensorReading>() }
@@ -161,12 +165,10 @@ fun SensorApp(
         }
 
         if (showSplash.value) {
-            SplashScreen(
-                onDismiss = {
-                    showSplash.value = false
-                    onSplashDismissed()
-                }
-            )
+            SplashScreen(isFirstLaunchOrUpgrade = isFirstLaunchOrUpgrade) {
+                showSplash.value = false
+                onSplashDismissed()
+            }
         }
     }
 }

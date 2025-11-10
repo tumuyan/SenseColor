@@ -1,4 +1,4 @@
-package com.example.sensorapp
+package com.tumuyan.sensecolor
 
 import android.content.Context
 import android.hardware.Sensor
