@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="deep_blue">#FF0B1220</color>
+    <color name="indigo">#FF24325B</color>
+    <color name="cobalt">#FF3653A1</color>
+    <color name="electric_blue">#FF4F6FF0</color>
+    <color name="neon_cyan">#FF4FE0D9</color>
+    <color name="soft_white">#FFF5F7FF</color>
+    <color name="icon_background">#FF0F1A33</color>
+    <color name="icon_glow">#334FE0D9</color>
+</resources>
