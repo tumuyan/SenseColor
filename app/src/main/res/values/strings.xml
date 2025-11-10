@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Sense Color</string>
+    <string name="splash_title">Sense Color</string>
+    <string name="splash_message">For the curious minds and digital explorers.\n\nSense Color peels back the layers of hardware abstraction, exposing the raw sensor data that powers your device.\n\nSee through your phone\'s eyes and discover the real colors of your world.</string>
+    <string name="splash_tap_hint">Tap anywhere to continue</string>
 </resources>

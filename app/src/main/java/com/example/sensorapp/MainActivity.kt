@@ -1,6 +1,8 @@
 package com.example.sensorapp
 
+import android.content.pm.PackageManager
 import android.hardware.SensorManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -46,8 +48,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
@@ -67,20 +71,49 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         sensorReader = SensorReader(this)
 
+        val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+        } else {
+            @Suppress("DEPRECATION")
+            packageManager.getPackageInfo(packageName, 0)
+        }
+        val currentVersionCode = PackageInfoCompat.getLongVersionCode(packageInfo)
+        val preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val lastVersionCode = preferences.getLong(KEY_LAST_VERSION_CODE, -1L)
+        val shouldShowSplash = lastVersionCode != currentVersionCode
+
         setContent {
             SensorReaderTheme {
-                SensorApp(sensorReader)
+                SensorApp(
+                    sensorReader = sensorReader,
+                    shouldShowSplash = shouldShowSplash,
+                    onSplashDismissed = {
+                        preferences.edit()
+                            .putLong(KEY_LAST_VERSION_CODE, currentVersionCode)
+                            .apply()
+                    }
+                )
             }
         }
+    }
+
+    companion object {
+        private const val PREFS_NAME = "sense_color_preferences"
+        private const val KEY_LAST_VERSION_CODE = "last_version_code"
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SensorApp(sensorReader: SensorReader) {
+fun SensorApp(
+    sensorReader: SensorReader,
+    shouldShowSplash: Boolean,
+    onSplashDismissed: () -> Unit
+) {
     val sensorReadings = remember { mutableStateMapOf<Int, SensorReading>() }
     var sensors by remember { mutableStateOf<List<SensorInfo>>(emptyList()) }
     var initialized by remember { mutableStateOf(false) }
+    val showSplash = rememberSaveable { mutableStateOf(shouldShowSplash) }
 
     LaunchedEffect(Unit) {
         sensors = sensorReader.discoverSensors()
@@ -99,30 +132,41 @@ fun SensorApp(sensorReader: SensorReader) {
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.app_name)) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = Color.White
+                    )
                 )
-            )
-        }
-    ) { paddingValues ->
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            if (!initialized) {
-                CenteredText("Initializing sensors...")
-            } else if (sensors.isEmpty()) {
-                CenteredText("No color or light sensors detected")
-            } else {
-                SensorList(sensors, sensorReadings)
             }
+        ) { paddingValues ->
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                if (!initialized) {
+                    CenteredText("Initializing sensors...")
+                } else if (sensors.isEmpty()) {
+                    CenteredText("No color or light sensors detected")
+                } else {
+                    SensorList(sensors, sensorReadings)
+                }
+            }
+        }
+
+        if (showSplash.value) {
+            SplashScreen(
+                onDismiss = {
+                    showSplash.value = false
+                    onSplashDismissed()
+                }
+            )
         }
     }
 }
